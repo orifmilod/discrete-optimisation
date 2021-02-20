@@ -1,21 +1,18 @@
-#include <algorithm>
+#include <chrono>
+#include <cstdlib>
 #include <fstream>
-#include <functional>
 #include <iostream>
-#include <numeric>
+#include <stdlib.h>
 #include <string>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 using namespace std;
-
+using namespace std::chrono;
 
 // Solution 1
-// int solve(int W, vector<int> &wt, vector<int> &val, int &n, int index,
-// vector<vector<int>> &cache) {
-// if (W <= 0 || index >= n) {
-// return 0;
+// unsigned int solve(unsigned int W, vector<unsigned int> &wt, vector<unsigned
+// int> &val, unsigned int &n, unsigned int index, vector<vector<unsigned int>>
+// &cache) { if (W <= 0 || index >= n) { return 0;
 // }
 //
 // if (cache[index][W] != -1) {
@@ -31,76 +28,105 @@ using namespace std;
 // return cache[index][W];
 // }
 
-// void solution1(int W, vector<int> wt, vector<int> val, int &n) {
-// vector<vector<int>> cache(n, vector<int>(W + 1, -1));
-// auto result = solve(W, wt, val, n, 0, cache);
-// cout << result << "1" << endl;
+// void solution1(unsigned int W, vector<unsigned int> wt, vector<unsigned int>
+// val, unsigned int &n) { vector<vector<unsigned int>> cache(n, vector<unsigned
+// int>(W + 1, -1)); auto result = solve(W, wt, val, n, 0, cache);
+////// cout << result << "1" << endl;
 // }
 
-void solve2(vector<vector<int>> &dp, vector<int> weights, vector<int> values) {
-  cout << "items" << dp.size() << " " << dp[0].size() << endl;
-  for (int item = 0; item < dp.size(); item++) {
-    for (int weight = 0; weight <= dp[0].size(); weight++) {
+void solve2(vector<vector<unsigned int>> &dp, vector<unsigned int> weights,
+            vector<unsigned int> values) {
+  for (unsigned int item = 0; item < dp.size(); item++) {
+    for (unsigned int weight = 1; weight < dp[0].size(); weight++) {
       // Cant put it in the bag, not enough space
-      cout << "item " << item << "with weight" << weights[item]
-           << " checking weights " << weight << endl;
-
-      if (weights[item] > weight)
+      if (weights[item] > weight) {
+        dp[item][weight] = item == 0 ? 0 : dp[item - 1][weight];
         continue;
+      }
 
       // If we can put it in the bag, we check if it is worth it to put it, put
       // it and get the max previous value subtracting this weight
+      unsigned int leftWeight = weight - weights[item];
+      if (leftWeight == 0) {
+        if (item == 0) {
+          dp[item][weight] = values[item];
+        } else {
+          dp[item][weight] = max(values[item], dp[item - 1][weight]);
+        }
 
-      int leftWeight = weight - weights[item];
-      cout << "left" << leftWeight << endl;
-      if (leftWeight <= 0) {
-        dp[item][weight + 1] = values[item];
-        cout << "Set value to " << values[item] << endl;
       } else {
         if (item == 0) {
-          dp[item][weight + 1] = dp[item][weight];
+          dp[item][weight] = dp[item][weight - 1];
         } else {
-
-          dp[item][weight + 1] =
-              max(dp[item - 1][leftWeight + 1] + values[item],
-                  dp[item - 1][weight + 1]);
+          dp[item][weight] = max(dp[item - 1][leftWeight] + values[item],
+                                 dp[item - 1][weight]);
         }
       }
     }
   }
+  cout << "Value: " << dp[dp.size() - 1][dp[0].size() - 1] << endl;
+  // Track down the dp table in order to get the choosen items
+  vector<int> choosen;
+  int weight = dp[0].size() - 1;
+  int item = dp.size() - 1;
 
-  cout << "HERE" << endl;
-  cout << dp[dp.size()][dp[0].size()] << endl;
+  for (auto &a : dp) {
+    for (auto &b : a) {
+      // cout << b << " ";
+    }
+    // cout << endl;
+  }
+
+  // cout << "weight: " << weight << " item " << weights[item] << endl;
+  while (weight > 0) {
+    // We have taken this item
+    // cout << "comparing" << dp[item][weight] << " " << dp[item - 1][weight]
+    // << endl;
+    if (dp[item][weight] != dp[item][weight - 1]) {
+      // cout << "Chosend " << item << " with weight " << weights[item] << endl;
+      choosen.push_back(item);
+      weight -= weights[item];
+    }
+    item--;
+  }
+
+  for (auto &item : choosen) {
+    // cout << item << endl;
+  }
 }
 
-void solution2(int &W, vector<int> weights, vector<int> values, int &n) {
-  vector<vector<int>> dp(n, vector<int>(W + 1, 0));
+void solution2(unsigned int &W, vector<unsigned int> weights,
+               vector<unsigned int> values, unsigned int &n) {
+  auto start = high_resolution_clock::now();
 
+  vector<vector<unsigned int>> dp(n, vector<unsigned int>(W + 1, 0));
   solve2(dp, weights, values);
+
+  auto stop = high_resolution_clock::now();
+  auto duration = duration_cast<microseconds>(stop - start);
+  // cout << "Duration: " << duration.count() << " ms" << endl;
 }
 
 int main(int argc, char *argv[]) {
   string file_name = argv[1];
+  unsigned int n, w;
 
-  std::ifstream infile(file_name);
+  n = strtol(argv[1], NULL, 10);
+  w = strtol(argv[2], NULL, 10);
 
-  int n, w;
-  infile >> n >> w;
-
-  vector<int> weights;
-  vector<int> values;
+  vector<unsigned int> weights;
+  vector<unsigned int> values;
 
   weights.reserve(n);
   values.reserve(n);
-  int t1, t2;
-
-  for (int i = 0; i < n; i++) {
-    infile >> t1 >> t2;
-    values.emplace_back(t1);
-    weights.emplace_back(t2);
+  for (int i = 3; i < argc - 1; i++) {
+    //// cout << strtol(argv[i], NULL, 10) << "---";
+    values.emplace_back(strtol(argv[i], NULL, 10));
+    i++;
+    //// cout << strtol(argv[i], NULL, 10) << endl;
+    weights.emplace_back(strtol(argv[i], NULL, 10));
   }
-  solution2(w, weights, values, n);
 
-  infile.close();
+  solution2(w, weights, values, n);
   return 0;
 }
