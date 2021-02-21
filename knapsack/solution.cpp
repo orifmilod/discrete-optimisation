@@ -1,5 +1,4 @@
 #include <chrono>
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
@@ -11,34 +10,36 @@ using namespace std;
 using namespace std::chrono;
 
 // Solution 1
-// unsigned int solve(unsigned int W, vector<unsigned int> &wt, vector<unsigned
-// int> &val, unsigned int &n, unsigned int index, vector<vector<unsigned int>>
-// &cache) { if (W <= 0 || index >= n) { return 0;
-// }
-//
-// if (cache[index][W] != -1) {
-// return cache[index][W];
-// } else if (W - wt[index] < 0) {
-// cache[index][W] = solve(W, wt, val, n, index + 1, cache);
-// } else {
-// cache[index][W] =
-// max(val[index] + solve(W - wt[index], wt, val, n, index + 1, cache),
-// solve(W, wt, val, n, index + 1, cache));
-// }
-//
-// return cache[index][W];
-// }
+int solve1(int W, vector<int> &wt, vector<int> &val, int &n, int index,
+           vector<vector<int>> &cache) {
+  if (W == 0 || index == n) {
+    return 0;
+  }
 
-// void solution1(unsigned int W, vector<unsigned int> wt, vector<unsigned int>
-// val, unsigned int &n) { vector<vector<unsigned int>> cache(n, vector<unsigned
-// int>(W + 1, -1)); auto result = solve(W, wt, val, n, 0, cache);
-// cout << result << "1" << endl;
-// }
+  if (cache[index][W] != -1) {
+    return cache[index][W];
+  } else if (W - wt[index] < 0) {
+    cache[index][W] = solve1(W, wt, val, n, index + 1, cache);
+  } else {
+    cache[index][W] =
+        max(val[index] + solve1(W - wt[index], wt, val, n, index + 1, cache),
+            solve1(W, wt, val, n, index + 1, cache));
+  }
 
-void solve2(vector<vector<unsigned int>> &dp, vector<unsigned int> weights,
-            vector<unsigned int> values) {
-  for (unsigned int item = 1; item < dp.size(); item++) {
-    for (unsigned int weight = 1; weight < dp[0].size(); weight++) {
+  return cache[index][W];
+}
+
+void solution1(int W, vector<int> wt, vector<int> val, int &n) {
+  vector<vector<int>> cache(n, vector<int>(W + 1, -1));
+
+  auto result = solve1(W, wt, val, n, 0, cache);
+  cout << "Result: " << result << endl;
+}
+
+// Solution 2
+void solve2(vector<vector<int>> &dp, vector<int> weights, vector<int> values) {
+  for (int item = 1; item < dp.size(); item++) {
+    for (int weight = 1; weight < dp[0].size(); weight++) {
       // Cant put it in the bag, not enough space
       if (weights[item - 1] > weight) {
         dp[item][weight] = item == 0 ? 0 : dp[item - 1][weight];
@@ -47,7 +48,7 @@ void solve2(vector<vector<unsigned int>> &dp, vector<unsigned int> weights,
 
       // If we can put it in the bag, we check if it is worth it to put it, put
       // it and get the max previous value subtracting this weight
-      unsigned int leftWeight = weight - weights[item - 1];
+      int leftWeight = weight - weights[item - 1];
       if (leftWeight == 0) {
         if (item == 0) {
           dp[item][weight] = values[item - 1];
@@ -65,13 +66,8 @@ void solve2(vector<vector<unsigned int>> &dp, vector<unsigned int> weights,
       }
     }
   }
-  // for (auto &a : dp) {
-  // for (auto &b : a) {
-  // cout << b << " ";
-  // }
-  // cout << endl;
-  // }
-  cout << dp[dp.size() - 1][dp[0].size() - 1] << " 1" << endl;
+
+  cout << "Result: " << dp[dp.size() - 1][dp[0].size() - 1] << endl;
 
   // Track down the dp table in order to get the choosen items
   unordered_map<int, bool> choosen;
@@ -87,32 +83,26 @@ void solve2(vector<vector<unsigned int>> &dp, vector<unsigned int> weights,
     item--;
   }
 
-  for (int i = 1; i < dp.size(); i++) {
-    cout << (choosen[i] ? 1 : 0) << " ";
+  cout << "Choosen items: ";
+  for (auto &item : choosen) {
+    cout << item.first << " ";
   }
 }
 
-void solution2(unsigned int &W, vector<unsigned int> weights,
-               vector<unsigned int> values, unsigned int &n) {
-  // auto start = high_resolution_clock::now();
-
-  vector<vector<unsigned int>> dp(n + 1, vector<unsigned int>(W + 1, 0));
+void solution2(int &W, vector<int> weights, vector<int> values, int &n) {
+  vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
   solve2(dp, weights, values);
-
-  // auto stop = high_resolution_clock::now();
-  // auto duration = duration_cast<microseconds>(stop - start);
-  // cout << "Duration: " << duration.count() << " ms" << endl;
 }
 
 int main(int argc, char *argv[]) {
   string file_name = argv[1];
-  unsigned int n, w;
+  int n, w;
 
   n = strtol(argv[1], NULL, 10);
   w = strtol(argv[2], NULL, 10);
 
-  vector<unsigned int> weights;
-  vector<unsigned int> values;
+  vector<int> weights;
+  vector<int> values;
 
   weights.reserve(n);
   values.reserve(n);
@@ -121,7 +111,15 @@ int main(int argc, char *argv[]) {
     i++;
     weights.emplace_back(strtol(argv[i], NULL, 10));
   }
+  // Uncomment start and end variable lines in order to calculate performance
+  // auto start = high_resolution_clock::now();
 
-  solution2(w, weights, values, n);
+  solution1(w, weights, values, n);
+  // solution2(w, weights, values, n);
+
+  // auto stop = high_resolution_clock::now();
+  // auto duration = duration_cast<microseconds>(stop - start);
+  // cout << "Duration: " << duration.count() << " ms" << endl;
+
   return 0;
 }
