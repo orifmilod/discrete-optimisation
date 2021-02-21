@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;
@@ -31,79 +32,75 @@ using namespace std::chrono;
 // void solution1(unsigned int W, vector<unsigned int> wt, vector<unsigned int>
 // val, unsigned int &n) { vector<vector<unsigned int>> cache(n, vector<unsigned
 // int>(W + 1, -1)); auto result = solve(W, wt, val, n, 0, cache);
-////// cout << result << "1" << endl;
+// cout << result << "1" << endl;
 // }
 
 void solve2(vector<vector<unsigned int>> &dp, vector<unsigned int> weights,
             vector<unsigned int> values) {
-  for (unsigned int item = 0; item < dp.size(); item++) {
+  for (unsigned int item = 1; item < dp.size(); item++) {
     for (unsigned int weight = 1; weight < dp[0].size(); weight++) {
       // Cant put it in the bag, not enough space
-      if (weights[item] > weight) {
+      if (weights[item - 1] > weight) {
         dp[item][weight] = item == 0 ? 0 : dp[item - 1][weight];
         continue;
       }
 
       // If we can put it in the bag, we check if it is worth it to put it, put
       // it and get the max previous value subtracting this weight
-      unsigned int leftWeight = weight - weights[item];
+      unsigned int leftWeight = weight - weights[item - 1];
       if (leftWeight == 0) {
         if (item == 0) {
-          dp[item][weight] = values[item];
+          dp[item][weight] = values[item - 1];
         } else {
-          dp[item][weight] = max(values[item], dp[item - 1][weight]);
+          dp[item][weight] = max(values[item - 1], dp[item - 1][weight]);
         }
 
       } else {
         if (item == 0) {
           dp[item][weight] = dp[item][weight - 1];
         } else {
-          dp[item][weight] = max(dp[item - 1][leftWeight] + values[item],
+          dp[item][weight] = max(dp[item - 1][leftWeight] + values[item - 1],
                                  dp[item - 1][weight]);
         }
       }
     }
   }
-  cout << "Value: " << dp[dp.size() - 1][dp[0].size() - 1] << endl;
+  // for (auto &a : dp) {
+  // for (auto &b : a) {
+  // cout << b << " ";
+  // }
+  // cout << endl;
+  // }
+  cout << dp[dp.size() - 1][dp[0].size() - 1] << " 1" << endl;
+
   // Track down the dp table in order to get the choosen items
-  vector<int> choosen;
+  unordered_map<int, bool> choosen;
   int weight = dp[0].size() - 1;
   int item = dp.size() - 1;
 
-  for (auto &a : dp) {
-    for (auto &b : a) {
-      // cout << b << " ";
-    }
-    // cout << endl;
-  }
-
-  // cout << "weight: " << weight << " item " << weights[item] << endl;
-  while (weight > 0) {
+  while (weight > 0 && item > 0) {
     // We have taken this item
-    // cout << "comparing" << dp[item][weight] << " " << dp[item - 1][weight]
-    // << endl;
-    if (dp[item][weight] != dp[item][weight - 1]) {
-      // cout << "Chosend " << item << " with weight " << weights[item] << endl;
-      choosen.push_back(item);
-      weight -= weights[item];
+    if (dp[item][weight] != dp[item - 1][weight]) {
+      choosen[item] = true;
+      weight -= weights[item - 1];
     }
     item--;
   }
 
-  for (auto &item : choosen) {
-    // cout << item << endl;
+  for (int i = 1; i < dp.size(); i++) {
+    cout << (choosen[i] ? 1 : 0) << " ";
   }
 }
 
 void solution2(unsigned int &W, vector<unsigned int> weights,
                vector<unsigned int> values, unsigned int &n) {
-  auto start = high_resolution_clock::now();
+  // auto start = high_resolution_clock::now();
 
-  vector<vector<unsigned int>> dp(n, vector<unsigned int>(W + 1, 0));
+  vector<vector<unsigned int>> dp(n + 1, vector<unsigned int>(W + 1, 0));
   solve2(dp, weights, values);
 
-  auto stop = high_resolution_clock::now();
-  auto duration = duration_cast<microseconds>(stop - start);
+  // auto stop = high_resolution_clock::now();
+  // auto duration = duration_cast<microseconds>(stop - start);
   // cout << "Duration: " << duration.count() << " ms" << endl;
 }
 
@@ -120,10 +117,8 @@ int main(int argc, char *argv[]) {
   weights.reserve(n);
   values.reserve(n);
   for (int i = 3; i < argc - 1; i++) {
-    //// cout << strtol(argv[i], NULL, 10) << "---";
     values.emplace_back(strtol(argv[i], NULL, 10));
     i++;
-    //// cout << strtol(argv[i], NULL, 10) << endl;
     weights.emplace_back(strtol(argv[i], NULL, 10));
   }
 
