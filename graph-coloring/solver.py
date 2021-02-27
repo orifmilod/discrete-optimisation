@@ -1,20 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple
+
 import subprocess
 import os
-
-Item = namedtuple("Item", ['index', 'value', 'weight'])
 
 def solve_it(input_data):
     # Modify this code to run your optimization algorithm
     arr = input_data.replace('\n',' ')
-    os.system('g++ -std=c++11 -o sol solution.cpp')
+    os.system('g++ -std=c++17 -o sol solution.cpp')
     cmd = './sol ' + arr
     out = subprocess.run(cmd.split(' '), stdout=subprocess.PIPE)
     return out.stdout.decode()
 
+import sys
 
 if __name__ == '__main__':
     import sys
@@ -24,6 +23,5 @@ if __name__ == '__main__':
             input_data = input_data_file.read()
         print(solve_it(input_data))
     else:
-        print('This test requires an input file.  Please select one from the data directory. (i.e. python solver.py ./data/ks_4_0)')
-
+        print('This test requires an input file.  Please select one from the data directory. (i.e. python solver.py ./data/gc_4_1)')
 

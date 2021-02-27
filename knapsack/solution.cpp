@@ -5,7 +5,7 @@
 #include <queue>
 #include <stdlib.h>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 using namespace std;
@@ -73,7 +73,7 @@ void solve2(vector<vector<int>> &dp, vector<int> weights, vector<int> values) {
   cout << "Result: " << dp[dp.size() - 1][dp[0].size() - 1] << endl;
 
   // Track down the dp table in order to get the choosen items
-  unordered_map<int, bool> choosen;
+  map<int, bool> choosen;
   int weight = dp[0].size() - 1;
   int item = dp.size() - 1;
 
@@ -98,45 +98,104 @@ void dynamic_programming_tabular(int &W, vector<int> weights,
   solve2(dp, weights, values);
 }
 
-void solution3(int &W, priority_queue<int> queue, vector<int> weights,
-               vector<int> values, double lower_bound, double upper_bound) {
-  // Start with the "root node"
-  queue.push(0);
+struct Node {
+  int level;
+  int value;
+  int weight;
+  float upper_bound;
+
+  Node(int _level, int _value, int _weight, float _upper_bound)
+      : level(_level), value(_value), weight(_weight),
+        upper_bound(_upper_bound) {}
+
+};
+
+bool compare_node(const Node &a, const Node &b) {
+  return a.upper_bound < b.upper_bound;
+}
+
+struct Item {
+  int weight;
+  int value;
+  float value_weight_ratio;
+
+  Item(int _weight, int _value, float _value_weight_ratio)
+      : weight(_weight), value(_value),
+        value_weight_ratio(_value_weight_ratio) {}
+};
+
+float get_upper_bound(Node &node, int &W, int &n, vector<Item> items) {
+  if (node.weight >= W)
+    return 0;
+
+  int j = node.level + 1;
+  int total_weight = node.weight;
+  float result = node.value;
+
+  while (j < n && total_weight + items[j].weight <= W) {
+    total_weight = total_weight + items[j].weight;
+    result += items[j].value;
+    j++;
+  }
+
+  if (j < n) {
+    result += items[j].value_weight_ratio;
+  }
+
+  return result;
 }
 
 // Branch and bound -> Best first search using priority queue
 void branch_bound_bfs(int &W, vector<int> weights, vector<int> values, int &n) {
-  priority_queue<int> queue;
-  vector<double> weight_to_value_ratio;
+  vector<Item> items;
+  items.reserve(n);
 
-  // Make a weight value pair in order to sort them and use the best first
-  // approach or Linear relaxation.
-  // We are going to take an optimistic evaluation and use that as our upper
-  // bound.
-  for (int i = 0; i < weights.size(); i++) {
-    weight_to_value_ratio.push_back(values[i] / (double)weights[i]);
+  for (int i = 0; i < n; i++) {
+    items.push_back({weights[i], values[i], values[i] / (float)weights[i]});
   }
 
-  sort(begin(weight_to_value_ratio), end(weight_to_value_ratio),
-       greater<double>());
+  sort(begin(items), end(items), [=](const Item &A, const Item &B) {
+    return A.value_weight_ratio > B.value_weight_ratio;
+  });
 
-  for (auto &a : weight_to_value_ratio) {
-    cout << a << endl;
-  }
+  int max_value = INT_MIN;
 
-  int index = 0;
-  double upper_bound;
+  priority_queue<Node, vector<Node>, decltype(&compare_node)> queue(
+      compare_node);
 
-  // Getting our optimistic evaluation
-  while (W > 0 && index < weight_to_value_ratio.size()) {
-    if (weight_to_value_ratio[index] <= W) {
-      W -= weight_to_value_ratio[index];
-      upper_bound += weight_to_value_ratio[index];
+  Node u{-1, -1, -1, -1};
+  Node v{-1, 0, 0, get_upper_bound(v, W, n, items)};
+
+  queue.push(v);
+
+  while (queue.size() > 0) {
+    Node item = queue.top();
+    queue.pop();
+
+    if (v.upper_bound > max_value) {
+      u.level = v.level + 1;
+      u.weight = v.weight + items[u.level].weight;
+      u.value = v.value + items[u.level].value;
+
+      if (u.weight <= W && u.value > max_value) {
+        max_value = u.value;
+      }
+
+      u.upper_bound = get_upper_bound(u, W, n, items);
+
+      if (u.upper_bound > max_value) {
+        queue.push(u);
+      }
+
+      u.weight = v.weight;
+      u.value = v.value;
+      u.upper_bound = get_upper_bound(u, W, n, items);
+      if (u.upper_bound > max_value)
+        queue.push(u);
     }
-    index++;
   }
 
-  solution3(W, queue, weights, values, INT_MIN, upper_bound);
+  cout << "Result: " << max_value;
 }
 
 int main(int argc, char *argv[]) {
