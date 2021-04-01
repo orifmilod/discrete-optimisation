@@ -8,7 +8,7 @@ import os
 def solve_it(input_data):
     # Modify this code to run your optimization algorithm
     arr = input_data.replace('\n',' ')
-    os.system('g++ -std=c++17 -o sol solution.cpp')
+    os.system('g++ -std=c++17 -o sol solution2.cpp')
     cmd = './sol ' + arr
     out = subprocess.run(cmd.split(' '), stdout=subprocess.PIPE)
     return out.stdout.decode()
