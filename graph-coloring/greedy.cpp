@@ -1,8 +1,10 @@
 #include "./Graph.cpp"
+#include <fstream>
 #include <iostream>
-#include <set>
-#include <string>
 #include <map>
+#include <set>
+#include <sstream>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -92,18 +94,37 @@ int minColor(Graph &graph) {
 
 int main(int argc, char *argv[]) {
   Graph graph(false);
+  int n, e, c = 0;
+  int nodeA = INT_MIN, nodeB = INT_MIN;
+  string line;
+  ifstream myfile("data.txt");
+  string temp;
 
-  string file_name = argv[1];
-  int N, E;
+  if (myfile.is_open()) {
+    while (getline(myfile, line, '\n')) {
+      // construct a stream from the string
+      std::stringstream ss(line);
+      std::string s;
+      while (getline(ss, temp, ' ')) {
+        if (c == 0) {
+          n = stoi(temp);
+        } else if (c == 1) {
+          e = stoi(temp);
+        } else if (c % 2 == 1) {
+          nodeB = stoi(temp);
+        } else {
+          nodeA = stoi(temp);
+        }
 
-  N = strtol(argv[1], NULL, 10);
-  E = strtol(argv[2], NULL, 10);
-
-  int nodeA, nodeB;
-  for (int i = 3; i < argc - 1; i+=2) {
-    nodeA = strtol(argv[i], NULL, 10);
-    nodeB = strtol(argv[i + 1], NULL, 10);
-    graph.addEdge(nodeA, nodeB);
+        if (nodeA != INT_MIN && nodeB != INT_MIN) {
+          graph.addEdge(nodeA, nodeB);
+          nodeA = INT_MIN;
+          nodeB = INT_MIN;
+        }
+        c++;
+      }
+    }
+    myfile.close();
   }
 
   // Minim number need to colors this graph is 2

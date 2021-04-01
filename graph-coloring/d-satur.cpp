@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <numeric>
 #include <set>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -43,23 +45,42 @@ int getAvailableColor(unordered_map<int, int> &currentlyColored,
 int main(int argc, char *argv[]) {
   // Read all the nodes and their edges and insert in the adjacency list
   unordered_map<int, set<int>> adjList;
+  int n, e, c = 0;
+  int nodeA = INT_MIN, nodeB = INT_MIN;
+  string line;
+  ifstream myfile("data.txt");
+  string temp;
 
-  string file_name = argv[1];
-  int n, e;
+  if (myfile.is_open()) {
+    while (getline(myfile, line, '\n')) {
+      // construct a stream from the string
+      std::stringstream ss(line);
+      std::string s;
+      while (getline(ss, temp, ' ')) {
+      if (c == 0) {
+        n = stoi(temp);
+      } else if (c == 1) {
+        e = stoi(temp);
+      } else if (c % 2 == 1) {
+        nodeB = stoi(temp);
+      } else {
+        nodeA = stoi(temp);
+      }
 
-  n = strtol(argv[1], NULL, 10);
-  e = strtol(argv[2], NULL, 10);
-
-  int nodeA, nodeB;
-  for (int i = 3; i < argc - 1; i += 2) {
-    nodeA = strtol(argv[i], NULL, 10);
-    nodeB = strtol(argv[i + 1], NULL, 10);
-    adjList[nodeA].insert(nodeB);
-    adjList[nodeB].insert(nodeA);
+      if (nodeA != INT_MIN && nodeB != INT_MIN) {
+        adjList[nodeA].insert(nodeB);
+        adjList[nodeB].insert(nodeA);
+        // cout << nodeA << " " << nodeB << '\n';
+        nodeA = INT_MIN;
+        nodeB = INT_MIN;
+      }
+      c++;
+      }
+    }
+    myfile.close();
   }
 
   // Make a vector of pairs which will be sorted by saturation level
-
   vector<pair<int, set<int>>> items;
   items.reserve(n);
 
@@ -78,7 +99,6 @@ int main(int argc, char *argv[]) {
   unordered_map<int, int> colored;
   // iterater from the most saturated nodes to the least and color them
   for (const auto &item : items) {
-    cout << item.first << ": " << item.second.size() << endl;
     int color = getAvailableColor(colored, adjList, item.first);
     colored[item.first] = color;
     allColors.insert(color);

@@ -7,10 +7,20 @@ import os
 
 def solve_it(input_data):
     # Modify this code to run your optimization algorithm
-    arr = input_data.replace('\n',' ')
-    os.system('g++ -std=c++17 -o sol solution2.cpp')
-    cmd = './sol ' + arr
+    #Clean the file data
+    file = open("data.txt","w")
+    file.close()
+
+    f = open("data.txt", "a")
+    f.write(input_data)
+    f.close()
+
+    solution = 'greedy.cpp' if input_data.replace('\n', ' ').split(' ')[0] == "50" else "d-satur.cpp"
+    os.system('g++ -std=c++17 -o sol ' + solution)
+    cmd = './sol'
     out = subprocess.run(cmd.split(' '), stdout=subprocess.PIPE)
+
+    os.remove('data.txt')
     return out.stdout.decode()
 
 import sys
