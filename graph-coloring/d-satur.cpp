@@ -81,16 +81,16 @@ int main(int argc, char *argv[]) {
   }
 
   // Make a vector of pairs which will be sorted by saturation level
-  vector<pair<int, set<int>>> items;
+  vector<pair<int, int>> items;
   items.reserve(n);
 
   for (const auto &item : adjList) {
-    items.emplace_back(item);
+    items.emplace_back(make_pair(item.first, item.second.size()));
   }
 
-  auto cmp = [](const pair<int, set<int>> &item1,
-                const pair<int, set<int>> &item2) -> bool {
-    return item1.second.size() > item2.second.size();
+  auto cmp = [](const pair<int, int> &item1,
+                const pair<int, int> &item2) -> bool {
+    return item1.second > item2.second;
   };
 
   sort(items.begin(), items.end(), cmp);
