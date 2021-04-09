@@ -2,11 +2,11 @@
 [Discret optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization) techniques applied on different combinatorial problems.
 
 ## Problems implemented
-[Graph-coloring](#graph-coloring)
-[Knapsack](#knapsack)
-[Travelling salesman](#travelling-salesman)
+[Graph-coloring](#graph-coloring) <br/>
+[Knapsack](#knapsack)  <br/>
+[Travelling salesman](#travelling-salesman) <br/>
 
-### Graph-coloring (aka map-coloring)
+###Graph-coloring (aka map-coloring)
 Problem statement: The basic idea is to color a graph in which no two connected nodes share the same colors. The challenge is to find the minumim number of colors needed to color the graph (chromatic number)
 
 <img src="https://user-images.githubusercontent.com/25881325/114223955-bc54e800-9970-11eb-92bb-61ac987abdb1.png" heigh='300px' width='300px'/>
