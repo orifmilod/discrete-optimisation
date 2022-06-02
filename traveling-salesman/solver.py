@@ -3,41 +3,54 @@
 
 import math
 from collections import namedtuple
-
-Point = namedtuple("Point", ['x', 'y'])
+from ortools.constraint_solver import pywrapcp
 
 def length(point1, point2):
-    return math.sqrt((point1.x - point2.x)**2 + (point1.y - point2.y)**2)
+    return math.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
 
-def solve_it(input_data):
-    # Modify this code to run your optimization algorithm
+def create_data_model(input_data):
+    """Stores the data for the problem."""
+    data = {}
 
-    # parse the input
-    lines = input_data.split('\n')
 
-    nodeCount = int(lines[0])
+    arr = input_data.split('\n')
+    n = int(arr[0])
+    data['distance_matrix'] = [[0 for x in range(n)] for y in range(n)]
 
     points = []
-    for i in range(1, nodeCount+1):
-        line = lines[i]
-        parts = line.split()
-        points.append(Point(float(parts[0]), float(parts[1])))
+    for i in range(n):
+        x,y  = arr[i + 1].split(' ')
+        points.append([float(x), float(y)])
 
-    # build a trivial solution
-    # visit the nodes in the order they appear in the file
-    solution = range(0, nodeCount)
+    for i in range(len(points)):
+        for j in range(len(points)):
+            a = points[i]
+            b = points[j]
+            dist = length(a, b)
+            print(dist)
+            print(a, b, dist)
+            data['distance_matrix'][i][j] = dist
 
-    # calculate the length of the tour
-    obj = length(points[solution[-1]], points[solution[0]])
-    for index in range(0, nodeCount-1):
-        obj += length(points[solution[index]], points[solution[index+1]])
+    data['num_vehicles'] = 1
+    data['depot'] = 0
+    return data
 
-    # prepare the solution in the specified output format
-    output_data = '%.2f' % obj + ' ' + str(0) + '\n'
-    output_data += ' '.join(map(str, solution))
 
-    return output_data
+def distance_callback(from_index, to_index, manager, data):
+    """Returns the distance between the two nodes."""
+    # Convert from routing variable Index to distance matrix NodeIndex.
+    from_node = manager.IndexToNode(from_index)
+    to_node = manager.IndexToNode(to_index)
+    return data['distance_matrix'][from_node][to_node]
 
+
+
+def solve_it(input_data):
+    data = create_data_model(input_data)
+    manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
+                                           data['num_vehicles'], data['depot'])
+    routing = pywrapcp.RoutingModel(manager)
+    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
 
 import sys
 
